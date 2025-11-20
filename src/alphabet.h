@@ -1,5 +1,15 @@
 #pragma once
 
+#define SYSEX_START 240
+#define SYSEX_MANUFACTURER_ID 16
+#define SYSEX_DEVICE_ID 6
+#define SYSEX_CMD_PARAMETER 6
+#define SYSEX_CMD_MATRIX 11
+#define SYSEX_NIBBLE_MASK 15
+#define SYSEX_CHECKSUM_END 127
+#define SYSEX_END 247
+
+
 /* 
 
 NRPN parameters
