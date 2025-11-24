@@ -6,12 +6,12 @@
 #include <unistd.h>
 
 #include "alphabet.h"
+#include "buffer.h"
 
 #define N_POLL_FDS 1
 #define IX_STDIN 0
-#define SIZE_BUFFER 4096
 
-
+/*
 void vca(uint8_t n) {
   uint32_t checksum   = 0;
   uint8_t volumeParam = 27;
@@ -29,22 +29,30 @@ void vca(uint8_t n) {
   putchar(checksum & SYSEX_CHECKSUM_END);
   putchar(SYSEX_END);
 }
+*/
 
 void repl() {
   int n                         = 0;
   int events                    = -1;
-  char buffer[SIZE_BUFFER]      = {0};
   struct pollfd fds[N_POLL_FDS] = {0};
+  ReadBuffer r                  = {0};
   fds[IX_STDIN].fd              = STDIN_FILENO;
   fds[IX_STDIN].events          = POLLIN;
+  readBuffer(&r);
   while (1) {
     events = poll(fds, N_POLL_FDS, -1);
     if      (events == -1) { errx(1, "poll error");}
     else if (fds[IX_STDIN].revents & POLLIN) { 
-      n = read(STDIN_FILENO, buffer, sizeof(buffer) - 1);
-      if (n > 0)       { vca(atoi(buffer));     }
-      else if (n == 0) { return;                } /* EOF */
-      else             { errx(1, "read error"); }
+      readToBuffer(&r);
+      switch (r.status) {
+        case READ_BUFFER_ERROR:
+          errx(1, "read error");
+          break;
+        case READ_BUFFER_EOF:
+          return;
+        case READ_BUFFER_OK:
+          warnx("");
+      }
     } 
   }
 }
