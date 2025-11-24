@@ -14,26 +14,29 @@
 
 NRPN parameters
 
-0   _  64 .. 127 dco1 freq
-1   _  1  .. 127 dco1 freq mod by lfo1
-2   _  64 .. 67  dco sync
-3   _  64 .. 127 dco1 pulse width
-4   _  1  .. 127 dco1 pulse width mod by lfo2
-5   _  64 .. 127 dco1 triangle waveshape
-6   _  64 .. 67  dco1 waveform
-7   _  64 .. 67  dco1 pitch bend/vibrato engaged (bitfield)
-8   _  64 .. 67  dco1 portamento engaged (bitfield)
-9   _  64 .. 67  dco1 click engaged
-10  _  64 .. 127 dco2 freq
-11  _  1  .. 127 dco2 freq mod by lfo1
-12  _  33 .. 95  dco2 detune
-13  _  64 .. 127 dco2 pulse width
-14  _  1  .. 127 dco2 pulse width mod by lfo2
-15  _  64 .. 127 dco2 triangle waveshape
-16  _  64 .. 67  dco2 waveform
-17  _  64 .. 67  dco2 pitch bend/vibrato engaged (bitfield)
-18  _  64 .. 67  dco2 portamento engaged (bitfield)
-19  _  64 .. 67  dco2 click engaged
+pitch → naked
+0   p1 64 .. 127 dco1 freq
+1   l1 1  .. 127 dco1 freq mod by lfo1
+2   y  64 .. 67  dco sync
+3   q1 64 .. 127 dco1 pulse width
+4   x1 1  .. 127 dco1 pulse width mod by lfo2
+5   z1 64 .. 127 dco1 triangle waveshape
+6   w1 64 .. 67  dco1 waveform
+7   b1 64 .. 67  dco1 pitch bend/vibrato engaged (bitfield)
+8   m1 64 .. 67  dco1 portamento engaged (bitfield)
+9   k1 64 .. 67  dco1 click engaged
+10  p2 64 .. 127 dco2 freq
+11  l2 1  .. 127 dco2 freq mod by lfo1
+12  t  33 .. 95  dco2 detune
+13  q2 64 .. 127 dco2 pulse width
+14  x2 1  .. 127 dco2 pulse width mod by lfo2
+15  z2 64 .. 127 dco2 triangle waveshape
+16  w2 64 .. 67  dco2 waveform
+17  b2 64 .. 67  dco2 pitch bend/vibrato engaged (bitfield)
+18  m2 64 .. 67  dco2 portamento engaged (bitfield)
+19  k2 64 .. 67  dco2 click engaged
+
+filter → CAPS
 20  _  64 .. 127 balance between dco1/2 pre-filter
 21  _  0  .. 127 vcf cutoff
 22  _  1  .. 127 vcf mod by env
@@ -47,6 +50,8 @@ NRPN parameters
 30  _  64 .. 127 vcf fm
 31  _  1  .. 127 vcf fm mod by env3
 32  _  1  .. 127 vcf fm mod by channel aftertouch
+
+control → @
 33  _  65 .. 84  tracking generator source
 34  _  64 .. 127 tracking point 1
 35  _  64 .. 127 tracking point 2
@@ -63,6 +68,8 @@ NRPN parameters
 47  _  64 .. 65  portamento legato engaged
 48  _  64 .. 67  voice assign mode
 49  _
+
+env → .
 50  _  64 .. 127 env1 delay
 51  _  64 .. 127 env1 attack
 52  _  64 .. 127 env1 decay
@@ -93,6 +100,8 @@ NRPN parameters
 77  _  64 .. 67  env3 multi-trigger mode
 78  _  64 .. 67  env3 mode
 79  _  64 .. 67  env3 trigger mode
+
+lfo → :
 80  _  64 .. 127 lfo1 freq
 81  _  1  .. 127 lfo1 mod by channel aftertouch
 82  _  64 .. 71  lfo1 waveform
