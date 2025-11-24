@@ -1,3 +1,4 @@
+#include "config.h"
 #include "repl.h"
 
 /*
@@ -20,8 +21,10 @@ void vca(uint8_t n) {
 }
 */
 
-int main() {
+int main(int argc, char **argv) {
+  Config c = {0};
   Repl r = {0};
-  repl(&r);
+  config (&c, argc, argv);
+  repl(&r, &c);
   return 0;
 }

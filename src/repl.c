@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include "buffer.h"
+#include "config.h"
 #include "repl.h"
 
 static bool isStdinReady(Repl *);
@@ -17,19 +18,21 @@ static bool isStdinReady(Repl *r) {
 
 static bool isStdoutReady(Repl *r) {
   WriteBufferStatus s = r->writeBuffer.status;
+  bool isTarget  = r->writeBuffer.target == WRITE_BUFFER_TARGET_STDOUT;
   bool canWrite  = s == WRITE_BUFFER_POPULATED || s == WRITE_BUFFER_WRITING;
   bool isPollout = r->fds[REPL_POLL_FDS_STDOUT_IX].revents & POLLOUT;
-  return canWrite && isPollout;
+  return isTarget && canWrite && isPollout;
 }
 
-void repl(Repl *r) {
+void repl(Repl *r, Config *c) {
   int events                             = 0;
   r->fds[REPL_POLL_FDS_STDIN_IX].fd      = STDIN_FILENO;
   r->fds[REPL_POLL_FDS_STDIN_IX].events  = POLLIN;
   r->fds[REPL_POLL_FDS_STDOUT_IX].fd     = STDOUT_FILENO;
   r->fds[REPL_POLL_FDS_STDOUT_IX].events = POLLOUT;
   readBuffer(&r->readBuffer);
-  writeBuffer(&r->writeBuffer, WRITE_BUFFER_TARGET_STDOUT);
+  writeBuffer(&r->writeBuffer, c->writeTarget);
+  warnx("awaiting commands");
   while (1) {
     events = poll(r->fds, REPL_POLL_FDS_N, -1);
     if (events == -1) { errx(1, "error polling IO"); }

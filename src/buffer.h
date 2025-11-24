@@ -3,6 +3,8 @@
 #include <stdint.h>
 #include <unistd.h>
 
+#include "config.h"
+
 #define BUFFER_SIZE 4096
 #define WRITE_BUFFER_SIZE (2 * BUFFER_SIZE)
 
@@ -26,11 +28,6 @@ typedef enum WriteBufferStatus {
   WRITE_BUFFER_WRITING,
   WRITE_BUFFER_ERROR
 } WriteBufferStatus;
-
-typedef enum WriteBufferTarget {
-  WRITE_BUFFER_TARGET_STDOUT = 0,
-  WRITE_BUFFER_TARGET_MIO
-} WriteBufferTarget;
 
 typedef struct WriteBuffer {
   WriteBufferStatus status;

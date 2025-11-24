@@ -3,6 +3,7 @@
 #include <poll.h>
 
 #include "buffer.h"
+#include "config.h"
 
 #define REPL_POLL_FDS_N 2
 #define REPL_POLL_FDS_STDIN_IX 0
@@ -14,4 +15,4 @@ typedef struct Repl {
   WriteBuffer   writeBuffer;
 } Repl;
 
-void repl(Repl *);
+void repl(Repl *, Config *);
