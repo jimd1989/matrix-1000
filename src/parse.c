@@ -4,9 +4,10 @@
 #include <string.h>
 
 #include "alphabet.h"
-#include "buffer.h"
 #include "midi.h"
 #include "parse.h"
+#include "read_buffer.h"
+#include "write_buffer.h"
 
 static bool isEnd(ReadBuffer *);
 static bool isComment(ReadBuffer *);

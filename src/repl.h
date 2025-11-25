@@ -2,8 +2,9 @@
 
 #include <poll.h>
 
-#include "buffer.h"
 #include "config.h"
+#include "read_buffer.h"
+#include "write_buffer.h"
 
 #define REPL_POLL_FDS_N 2
 #define REPL_POLL_FDS_STDIN_IX 0
