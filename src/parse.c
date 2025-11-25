@@ -74,36 +74,24 @@ static void parseNrpnCmd(ReadBuffer *r, WriteBuffer *w) {
     r->status = READ_BUFFER_ERROR;
     return;
   }
-  if (w->parsePos + MIDI_NRPN_MSG_SIZE >= WRITE_BUFFER_SIZE) {
-    warnx("input too long");
-    w->status = WRITE_BUFFER_ERROR;
-    return;
-  }
-  msg = nrpnMsg(cmd.param, n);
-  for (; i < MIDI_NRPN_MSG_SIZE ; i++, w->parsePos++, w->bytesToWrite++) {
-    w->data[w->parsePos] = msg[i];
-  }
+  writeNrpnMsg(w, cmd.param, n);
 }
 
 void parseCmds(ReadBuffer *r, WriteBuffer *w) {
-  int oldWritePos             = w->parsePos; /* to rollback bad input */
-  WriteBufferStatus oldStatus = w->status;
+  int oldPos = w->parsePos;
   while (r->pos < r->bytesRead) {
     eatWhitespace(r);
     if (isEnd(r) || isComment(r)) { return; } /* skip blank/commented input */
     parseNrpnCmd(r, w);
     if (r->status == READ_BUFFER_ERROR) {
       r->status   = READ_BUFFER_OK;
-      w->status   = oldStatus;
-      w->parsePos = oldWritePos;
+      rollbackWriteBuffer(w, oldPos);
       return;
     }
-    if (w->status == WRITE_BUFFER_ERROR) {
-      w->status   = oldStatus;
-      w->parsePos = oldWritePos;
+    if (isWriteBufferError(w)) {
+      rollbackWriteBuffer(w, oldPos);
       return;
     }
+    (void)deriveWriteBufferStatus(w);
   }
-  /* since reading can only take place when EMPTY | POPULATED this is fine */
-  if (w->bytesToWrite > 0) { w->status = WRITE_BUFFER_POPULATED; }
 }

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <stdbool.h>
 #include <stdint.h>
 
 #include "config.h"
@@ -14,14 +15,17 @@ typedef enum WriteBufferStatus {
 } WriteBufferStatus;
 
 typedef struct WriteBuffer {
-  WriteBufferStatus status;
-  WriteBufferTarget target;
-  ssize_t           parsePos; /* position of stdin → bytes */
-  ssize_t           writePos; /* position of bytes → output */
-  ssize_t           bytesToWrite;
-  ssize_t           maxSize;
-  uint8_t           data[WRITE_BUFFER_SIZE];
+  ssize_t parsePos; /* position of stdin → bytes */
+  ssize_t writePos; /* position of bytes → output */
+  ssize_t bytesToWrite;
+  uint8_t data[WRITE_BUFFER_SIZE];
 } WriteBuffer;
 
 void writeBuffer(WriteBuffer *, WriteBufferTarget);
+WriteBufferStatus deriveWriteBufferStatus(WriteBuffer *);
+bool canWriteStdout(WriteBuffer *);
+bool isWriting(WriteBuffer *);
+bool isWriteBufferError (WriteBuffer *);
+void writeNrpnMsg(WriteBuffer *, uint8_t, uint8_t);
+void rollbackWriteBuffer(WriteBuffer *, int);
 void writeFromBufferToStdout(WriteBuffer *);

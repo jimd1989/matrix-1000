@@ -15,20 +15,17 @@ static void pollFds(Repl *);
 static bool isStdinReady(Repl *);
 static bool isStdoutReady(Repl *);
 static void readStdin(Repl *);
-static void writeStdout(Repl *);
 
 static bool isStdinReady(Repl *r) {
-  bool isNotWriting = r->writeBuffer.status != WRITE_BUFFER_WRITING;
+  bool isNotWriting = !isWriting(&r->writeBuffer);
   bool isPollin     = r->fds[REPL_POLL_FDS_STDIN_IX].revents & POLLIN;
   return isNotWriting && isPollin;
 }
 
 static bool isStdoutReady(Repl *r) {
-  WriteBufferStatus s = r->writeBuffer.status;
-  bool isTarget  = r->writeBuffer.target == WRITE_BUFFER_TARGET_STDOUT;
-  bool canWrite  = s == WRITE_BUFFER_POPULATED || s == WRITE_BUFFER_WRITING;
+  bool canWrite  = canWriteStdout(&r->writeBuffer);
   bool isPollout = r->fds[REPL_POLL_FDS_STDOUT_IX].revents & POLLOUT;
-  return isTarget && canWrite && isPollout;
+  return canWrite && isPollout;
 }
 
 static void fds(Repl *r) {
@@ -55,18 +52,6 @@ static void readStdin(Repl *r) {
   }
 }
 
-static void writeStdout(Repl *r) {
-  writeFromBufferToStdout(&r->writeBuffer);
-  switch(r->writeBuffer.status) {
-    case WRITE_BUFFER_ERROR:
-      errx(1, "error writing to stdout");
-    case WRITE_BUFFER_WRITING:
-    case WRITE_BUFFER_POPULATED:
-    case WRITE_BUFFER_EMPTY:
-      return;
-  }
-}
-
 void repl(Repl *r, Config *c) {
   fds(r);
   readBuffer(&r->readBuffer);
@@ -75,6 +60,6 @@ void repl(Repl *r, Config *c) {
   while (1) {
     pollFds(r);
     if (isStdinReady(r))  { readStdin(r);   }
-    if (isStdoutReady(r)) { writeStdout(r); }
+    if (isStdoutReady(r)) { writeFromBufferToStdout(&r->writeBuffer); }
   }
 }
