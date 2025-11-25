@@ -1,5 +1,7 @@
 #pragma once
 
+#include <stdint.h>
+
 #define SYSEX_START 240
 #define SYSEX_MANUFACTURER_ID 16
 #define SYSEX_DEVICE_ID 6
@@ -9,6 +11,19 @@
 #define SYSEX_CHECKSUM_END 127
 #define SYSEX_END 247
 
+typedef uint32_t Hash;
+
+typedef struct NrpnCmd {
+  char    * name;  /* shell cmd */
+  uint8_t   param;  /* matrix-1000 parameter number */
+  int8_t    min;    /* user-facing min value (negative possible) */
+  int8_t    max;    /* user-facing max value */
+  int8_t    offset; /* offset needed to encode user-facing values ∈ [0, 127] */
+} NrpnCmd;
+
+void nrpnCmds();
+NrpnCmd lookupNrpnCmd(char *);
+void hashTest();
 
 /* 
 

@@ -26,7 +26,7 @@ static void parseWriteTargetConfig(Config *c, char *s) {
 void config(Config *c, int argc, char **argv) {
   int pos        = 1;
   c->chan        = 0;
-  c->writeTarget = WRITE_BUFFER_TARGET_STDOUT;
+  c->writeTarget = WRITE_BUFFER_TARGET_MIO;
   while (pos < argc) {
     if (strcmp(argv[pos], "-chan") == 0) {
       parseMidiChannelConfig(c, argv[++pos]);

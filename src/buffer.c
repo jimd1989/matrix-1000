@@ -2,6 +2,7 @@
 #include <unistd.h>
 
 #include "buffer.h"
+#include "config.h"
 
 void readBuffer(ReadBuffer *r) {
   r->status    = READ_BUFFER_OK;
@@ -18,7 +19,8 @@ void readToBuffer(ReadBuffer *r) {
   else                        { r->status = READ_BUFFER_ERROR; }
 }
 
-void writeBuffer(WriteBuffer *w, WriteBufferTarget target) {
+void writeBuffer(WriteBuffer *w, MidiChannel chan, WriteBufferTarget target) {
+  w->chan     = chan;
   w->status   = WRITE_BUFFER_EMPTY;
   w->target   = target;
   w->parsePos = 0;

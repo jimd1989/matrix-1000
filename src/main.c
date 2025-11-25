@@ -1,4 +1,8 @@
+#include <err.h>
+
+#include "alphabet.h"
 #include "config.h"
+#include "midi.h"
 #include "repl.h"
 
 /*
@@ -24,7 +28,10 @@ void vca(uint8_t n) {
 int main(int argc, char **argv) {
   Config c = {0};
   Repl r = {0};
-  config (&c, argc, argv);
+  config (&c, argc, argv); /* eventually won't need MIDI channel */
+  midi(c.chan);
+  nrpnCmds();
+  /* hashTest(); */
   repl(&r, &c);
   return 0;
 }

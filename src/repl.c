@@ -5,6 +5,7 @@
 
 #include "buffer.h"
 #include "config.h"
+#include "parse.h"
 #include "repl.h"
 
 static bool isStdinReady(Repl *);
@@ -31,7 +32,7 @@ void repl(Repl *r, Config *c) {
   r->fds[REPL_POLL_FDS_STDOUT_IX].fd     = STDOUT_FILENO;
   r->fds[REPL_POLL_FDS_STDOUT_IX].events = POLLOUT;
   readBuffer(&r->readBuffer);
-  writeBuffer(&r->writeBuffer, c->writeTarget);
+  writeBuffer(&r->writeBuffer, c->chan, c->writeTarget);
   warnx("awaiting commands");
   while (1) {
     events = poll(r->fds, REPL_POLL_FDS_N, -1);
@@ -45,7 +46,7 @@ void repl(Repl *r, Config *c) {
         case READ_BUFFER_EOF:
           return;
         case READ_BUFFER_OK:
-          warnx("");
+          parseCmds(&r->readBuffer, &r->writeBuffer);
       }
     }
     if (isStdoutReady(r)) {

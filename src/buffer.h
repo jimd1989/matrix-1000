@@ -30,6 +30,7 @@ typedef enum WriteBufferStatus {
 } WriteBufferStatus;
 
 typedef struct WriteBuffer {
+  MidiChannel       chan;
   WriteBufferStatus status;
   WriteBufferTarget target;
   ssize_t           parsePos; /* position of stdin → bytes */
@@ -40,6 +41,6 @@ typedef struct WriteBuffer {
 } WriteBuffer;
 
 void readBuffer(ReadBuffer *);
-void writeBuffer(WriteBuffer *, WriteBufferTarget);
+void writeBuffer(WriteBuffer *, MidiChannel, WriteBufferTarget);
 void readToBuffer(ReadBuffer *);
 void writeFromBufferToStdout(WriteBuffer *);
