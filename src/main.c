@@ -3,6 +3,7 @@
 #include "alphabet.h"
 #include "config.h"
 #include "midi.h"
+#include "mio.h"
 #include "repl.h"
 
 /*
@@ -29,6 +30,7 @@ int main(int argc, char **argv) {
   Config c = {0};
   Repl r = {0};
   config (&c, argc, argv);
+  mio(&r.mio, &c);
   midi(c.chan);
   nrpnCmds();
   /* hashTest(); */

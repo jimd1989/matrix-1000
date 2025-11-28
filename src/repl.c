@@ -14,6 +14,7 @@ static void fds(Repl *);
 static void pollFds(Repl *);
 static bool isStdinReady(Repl *);
 static bool isStdoutReady(Repl *);
+static bool isMidiInReady(Repl *);
 static void readStdin(Repl *);
 
 static bool isStdinReady(Repl *r) {
@@ -28,11 +29,17 @@ static bool isStdoutReady(Repl *r) {
   return canWrite && isPollout;
 }
 
+static bool isMidiInReady(Repl *r) {
+  if (r->mio.input == NULL) { return false; }
+  return r->fds[REPL_POLL_FDS_MIDI_IN_IX].revents & POLLIN;
+}
+
 static void fds(Repl *r) {
   r->fds[REPL_POLL_FDS_STDIN_IX].fd      = STDIN_FILENO;
   r->fds[REPL_POLL_FDS_STDIN_IX].events  = POLLIN;
   r->fds[REPL_POLL_FDS_STDOUT_IX].fd     = STDOUT_FILENO;
   r->fds[REPL_POLL_FDS_STDOUT_IX].events = POLLOUT;
+  r->fds[REPL_POLL_FDS_MIDI_IN_IX]       = r->mio.inputPollFd;
 }
 
 static void pollFds(Repl *r) {
@@ -56,10 +63,11 @@ void repl(Repl *r, Config *c) {
   fds(r);
   readBuffer(&r->readBuffer);
   writeBuffer(&r->writeBuffer, c->writeTarget);
-  warnx("awaiting commands");
+  warnx("writing MIDI on channel %d", c->chan + 1);
   while (1) {
     pollFds(r);
     if (isStdinReady(r))  { readStdin(r);   }
     if (isStdoutReady(r)) { writeFromBufferToStdout(&r->writeBuffer); }
+    /* if (isMidiInReady(r)) { warnx("MIDI"); } */
   }
 }

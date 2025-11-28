@@ -34,6 +34,9 @@ void config(Config *c, int argc, char **argv) {
     } else if (strcmp(argv[pos], "-output") == 0) {
       parseWriteTargetConfig(c, argv[++pos]);
       pos++;
+    } else if (strcmp(argv[pos], "-input") == 0) {
+      c->input = argv[++pos];
+      pos++;
     } else { errx(1, "unknown option %s", argv[pos]); }
   }
 }
