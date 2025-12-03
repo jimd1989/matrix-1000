@@ -47,7 +47,8 @@
 (← ($> Fω α) (*> Fω (right α)))
 (← (lift2 f Fα Fω) (● (⊙ (C f) Fα) Fω))
 (← (sequence Fω) (foldr (λ (x acc) (lift2 ⊂ x acc)) (right ∅) Fω))
-(← (traverse f Fω) (sequence (∀ f Fω)))
+(← (break △ Fω) (? (left? Fω) (△ Fω) Fω))
+(← (traverse f Fω) (call/cc (λ (△) (sequence (∀ (∘ ((C break) △) f) Fω)))))
 (← (ι n Fω) (either (list-ref Fω n)))
 (← (ensure p e ω) (? p (right ω) (left e)))
 (← (s⊥ f e ω) (>>= (λ (α) (ensure α (◇ e ": " ω) α)) (either (f ω))))
@@ -71,8 +72,7 @@
 
 
 ; scratch
-(to-number "a")
-(traverse to-number (list "1" '() "3" "4"))
+(traverse s⊥n (list "1" '() "3" "4"))
 (∈-nrpn 'p2)
 (∈ NRPN-CMDS 'p1)
 (nrpn '("l1" "q"))
