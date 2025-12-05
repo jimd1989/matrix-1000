@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include "config.h"
+#include "mio.h"
 
 #define BUFFER_SIZE 4096
 
@@ -23,3 +24,4 @@ typedef struct ReadBuffer {
 
 void readBuffer(ReadBuffer *);
 void readToBuffer(ReadBuffer *);
+void readMidiToBuffer(ReadBuffer *, Mio *);

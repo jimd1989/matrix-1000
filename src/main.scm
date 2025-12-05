@@ -1,5 +1,6 @@
 (import (chicken bitwise) (chicken condition) (chicken file posix) 
-        (chicken foreign) (chicken io) (chicken string) (srfi 4))
+        (chicken foreign) (chicken io) (chicken process-context)
+        (chicken string) (srfi 1) (srfi 4))
 
 #>
 #include <err.h>
@@ -17,16 +18,17 @@ static struct pollfd POLL_FDS[2] = {0};
 static struct mio_hdl *MIDI_OUT;
 static struct mio_hdl *MIDI_IN; /* optional */
 
-void init_midi(char *midiIn) {
+void init_midi(char *out, char *in, uint8_t chan) {
   POLL_FDS[STDIN_IX].fd = STDIN_FILENO;
   POLL_FDS[STDIN_IX].events = POLLIN;
-  MIDI_OUT = mio_open(MIO_PORTANY, MIO_OUT, false);
-  if (MIDI_OUT == NULL) { errx(1, "MIDI output not found: %s", MIO_PORTANY); }
-  if (midiIn != NULL) {
-    MIDI_IN = mio_open(midiIn, MIO_IN, true);
-    if (MIDI_IN == NULL) { errx(1, "MIDI input not found: %s", midiIn); }
+  MIDI_OUT = mio_open(out, MIO_OUT, false);
+  if (MIDI_OUT == NULL) { errx(1, "MIDI output not found: %s", out); }
+  if (in != NULL) {
+    MIDI_IN = mio_open(in, MIO_IN, true);
+    if (MIDI_IN == NULL) { errx(1, "MIDI input not found: %s", in); }
     mio_pollfd(MIDI_IN, &POLL_FDS[MIDI_IN_IX], POLLIN);
   }
+  warnx("chan: %d\tin: %s\tout: %s", chan + 1, in != NULL ? in : "∅", out);
 }
 
 int poll_input() {
@@ -54,66 +56,86 @@ void close_midi() {
 (define-syntax ? (syntax-rules () ((_ . ω) (if . ω))))
 (define-syntax ← (syntax-rules () ((_ . ω) (define . ω))))
 (define-syntax ∃ (syntax-rules () ((_ . ω) (let* . ω))))
-(define-syntax maybe (syntax-rules ()
-  ((_ f ...) (∃ ((ω (condition-case ((λ () f ...)) ((exn) 'NONE))))
-               (? (eq? 'NONE ω) 'NONE `(SOME ,ω))))))
-(define-syntax for (syntax-rules (⇐ ⇒)
-  ((_ (⇐ α β) ω ...) (>>= (λ (α) (for ω ...)) β))
-  ((_ (⇒ α β) ω ...) (>>= (λ (α) (for ω ...)) (some β)))
-  ((_ ω) (some ω))))
+(define-syntax either
+  (syntax-rules ()
+    ((_ f ...)
+     (∃ ((ω (condition-case ((λ () f ...))
+              (e (exn) (left (get-condition-property e 'exn 'message))))))
+       (? (left? ω) ω (right ω))))))
+(define-syntax for
+  (syntax-rules (←)
+    ((_ (← α β) ω Ω ...) (>>= (λ (α) (for ω Ω ...)) β))
+    ((_ (  α β) ω Ω ...) (>>= (λ (α) (for ω Ω ...)) (right β)))
+    ((_               ω) (right ω))))
 
-(← NRPN-CMDS '((p1 0   0 63 64)
-               (l1 1 -63 63 64)
-               (y  2   0  3 64)
-               (q1 3   0 63 64)))
-
-(← init-midi (foreign-lambda void "init_midi" c-string))
+(← ↑ car) (← ↓ cdr) (← ↑↓ cadr) (← ∘ compose) (← ≡ equal?) (← ∅ '()) 
+(← ∅? null?) (← ρ length) (← ◇ conc) (← ⊂ cons) (← ∀ map) (← ∀∀ for-each)
+(← $ apply)
+(← (∧ ω α) (and ω α))
+(← (∨ ω α) (or ω α))
+(← (I ω) ω)
+(← (K ω) (λ (α) ω))
+(← (C f) (λ (ω) (λ (α) (f ω α))))
+(← (S g f) (λ (ω) (g ω (f ω))))
+(← (J h g f) (λ (ω) (h (g ω) (f ω))))
+(← (right ω) `(R ,ω))
+(← (left ω) `(L ,ω))
+(← (right? ω) (? (list? ω) (? (≡ 2 (ρ ω)) (≡ 'R (↑ ω)) #f) #f))
+(← (left? ω) (? (list? ω) (? (≡ 2 (ρ ω)) (≡ 'L (↑ ω)) #f) #f))
+(← (either? ω) (? ((J ∨ left? right?) ω) ω (left (◇ "not an either: " ω))))
+(← (get Fω) (? (right? Fω) (↑↓ Fω) (error (↑↓ Fω))))
+(← (get-or ω Fω) (? (right? Fω) (↑↓ Fω) ω))
+(← (⊙ f Fω) (∃ ((α (either? Fω))) (? (right? α) (right (f (↑↓ α))) α)))
+(← (_⊙ f Fω) (∃ ((α (either? Fω))) (? (left? α) (left (f (↑↓ α))) α)))
+(← (⊙⊙ f g Fω) (⊙ f (_⊙ g Fω)))
+(← (⊥ Fω) (either (get (get Fω))))
+(← (>>= f Fω) (⊥ (⊙ f Fω)))
+(← (● Ff Fω) (>>= (λ (ω) (⊙ (λ (f) (f ω)) Ff)) Fω))
+(← (*> Fω Fα) (>>= (K Fα) Fω))
+(← ($> Fω α) (*> Fω (right α)))
+(← (lift2 f Fα Fω) (● (⊙ (C f) Fα) Fω))
+(← (sequence Fω) (foldr (λ (x acc) (lift2 ⊂ x acc)) (right ∅) Fω))
+(← (brk △ Fω) (? (left? Fω) (△ Fω) Fω))
+(← (traverse f Fω) (call/cc (λ (△) (sequence (∀ (∘ ((C brk) △) f) Fω)))))
+(← (ι n Fω) (either (list-ref Fω n)))
+(← (ensure p e ω) (? p (right ω) (left e)))
+(← (s⊥ f e ω) (>>= (λ (α) (ensure α (◇ e ": " ω) α)) (either (f ω))))
+(← (s⊥n ω) (s⊥ string->number "not number" ω))
+(← (s⊥x ω) (s⊥ string->symbol "not symbol" ω))
+(← (∈ ω k) (∃ ((α (assoc k ω))) (⊙ ↓ (ensure α (◇ "cmd not found: " k) α))))
+(← (group n Fω) (? (∅? Fω) ∅ (⊂ `(,(take Fω n)) (group n (drop Fω n)))))
+(← init-midi (foreign-lambda void "init_midi" c-string c-string int))
+(← (init) (for (← ω (either (group 2 (command-line-arguments))))
+               (chan-str (get-or "1" (∈ ω "chan")))
+               (output-str (get-or "midi/0" (∈ ω "output")))
+               (input-str (get-or #f (∈ ω "input")))
+               (← chan (⊙ ((C +) -1) (s⊥n chan-str)))
+               (init-midi output-str input-str chan)))
 (← poll-input (foreign-lambda int "poll_input"))
 (← forward-midi (foreign-lambda void "forward_midi"))
 (← close-midi (foreign-lambda void "close_midi"))
-(← ρ length) (← ∘ compose) (← ↑ car) (← ↑↓ cadr) (← ↓ cdr) (← ◇ conc)
-(← $ apply) (← ⊂ cons) (← ∀ map) (← s⊥xs string-split) (← s⊥n string->number)
-(← s⊥x string->symbol)
-(← (K ω) (λ (α) ω))
-(← (C f) (λ (α) (λ (ω) (f α ω))))
-(← (some ω) `(SOME ,ω))
-(← none 'NONE)
-(← (none? ω) (eq? none ω))
-(← (maybe? ω) (? (or (none? ω) (and (list ω) (= 2 (ρ ω)))) ω none))
-(← (some? ω) (and (maybe? ω) (not (none? ω))))
-(← (⊙ f Fω) (∃ ((Fα (maybe? Fω))) (? (none? Fα) none (some (f (↑↓ Fα))))))
-(← (⊥ Fω) (maybe (↑↓ (↑↓ Fω))))
-(← (>>= f Fω) (⊥ (⊙ f Fω)))
-(← (● Ff Fω) (>>= (λ (ω) (⊙ (λ (f) (f ω)) Ff)) Fω))
-(← (lift f Fα Fω) (● (⊙ (C f) Fα) Fω))
-(← (sequence ω) (foldr (λ (x acc) (lift ⊂ x acc)) (some '()) ω))
-(← (traverse f ω) (sequence (map f ω)))
-(← (guard p) (? p (some 'UNIT) none))
-(← (ι n ω) (maybe (list-ref ω n)))
 (← (stdin-ready? n) (? (eq? (bitwise-and 1 n) 1) #t #f))
 (← (midi-ready? n) (? (eq? (bitwise-and 1 (arithmetic-shift n -1)) 1) #t #f))
-(← (to-number ω) (⊙ (K (s⊥n ω)) (guard (s⊥n ω))))
-(← (∈ ω α) (∃ ((c (assoc α ω))) (? c (maybe (↓ c)) none)))
-(← (to-nrpn ω) (for (⇐ cmd (ι 0 ω))
-                    (⇐ valid-cmd (∈ NRPN-CMDS (s⊥x cmd)))
-                    (⇐ cmd-byte (ι 0 valid-cmd))
-                    (⇐ min (ι 1 valid-cmd))
-                    (⇐ max (ι 2 valid-cmd))
-                    (⇐ offset (ι 3 valid-cmd))
-                    (⇐ val (>>= to-number (ι 1 ω)))
-                    (⇐ _ (guard (>= val min)))
-                    (⇐ _ (guard (<= val max)))
-                    `(,cmd-byte ,(+ offset val))))
-(← (read-stdin) (traverse to-nrpn (∀ s⊥xs (s⊥xs (read-line) ";"))))
-
-; main
-(init-midi "midi/1")
+(← (read-stdin) (print (↑↓ (either (eval (read))))))
 (← (midi-repl)
   (let ((signals (poll-input)))
-    (? (stdin-ready? signals) (print (read-stdin)))
+    (? (stdin-ready? signals) (read-stdin))
     (? (midi-ready? signals) (forward-midi)))
-(← (stdin-ready? n) (? (eq? (bitwise-and 1 n) 1) #t #f))
   (midi-repl))
 
+(define-syntax nrpn-cmds
+  (syntax-rules ()
+    ((_ ((cmd byte min max offset) ...))
+     (begin (← (cmd ω) (for (← _ (ensure (>= ω min) (◇ ω " < " min) ∅))
+                            (← _ (ensure (<= ω max) (◇ ω " > " max) ∅))
+                            `(,byte ,(+ offset ω)))) ...))))
+
+(nrpn-cmds ((p1 0   0 63 64)
+            (l1 1 -63 63 64)
+            (y  2   0  3 64)
+            (q1 3   0 63 64)))
+
+; main
+(init)
 (midi-repl)
 (close-midi)

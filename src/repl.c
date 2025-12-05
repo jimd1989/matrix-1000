@@ -57,6 +57,7 @@ static void readStdin(Repl *r) {
     case READ_BUFFER_OK:
       parseCmds(&r->readBuffer, &r->writeBuffer);
   }
+  r->fds[REPL_POLL_FDS_STDIN_IX].revents = 0;
 }
 
 void repl(Repl *r, Config *c) {
@@ -66,8 +67,8 @@ void repl(Repl *r, Config *c) {
   warnx("writing MIDI on channel %d", c->chan + 1);
   while (1) {
     pollFds(r);
-    if (isStdinReady(r))  { readStdin(r);   }
-    if (isStdoutReady(r)) { writeFromBufferToStdout(&r->writeBuffer); }
-    /* if (isMidiInReady(r)) { warnx("MIDI"); } */
+    if (isStdinReady(r))  { readStdin(r);                              }
+    if (isStdoutReady(r)) { writeFromBufferToStdout(&r->writeBuffer);  }
+    if (isMidiInReady(r)) { readMidiToBuffer(&r->readBuffer, &r->mio); } 
   }
 }
