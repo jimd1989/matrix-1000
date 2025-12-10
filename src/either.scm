@@ -69,6 +69,14 @@
                  (← _ (ensure (>= val min) (◇ val " < " min) ∅)) 
                  (← _ (ensure (<= val max) (◇ val " > " max) ∅))
                  `(,cmd-byte ,(+ offset val))))
+(← (▽C f Fω) (foldr (λ (α Fα) `(λ (,α) ,Fα)) `(,f ,@Fω) Fω))
+(← (CC f) (∃ ((Fω (↓ (procedure-information f)))) (eval (▽C f Fω))))
+(▽C ggg '(x y z))
+(← (▽C f Fω Fα) (? (∅? Fω) `(,f ,@Fα) `(λ (,(↑ Fω)) ,(▽C f (↓ Fω) Fα))))
+(← (CC f) (∃ ((Fω (↓ (procedure-information f)))) (eval (▽C f Fω Fω))))
+(← ggg (λ (x y z) (+ x y z)))
+(← gg (CC ggg))
+(((gg 1) 2) 3)
 
 
 ; scratch
